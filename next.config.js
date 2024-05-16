@@ -20,6 +20,15 @@ const nextConfig = {
       },
     ],
   },
+  // async redirects(){
+  //   return [
+  //     {
+  //       source: '/',
+  //       destination: '/simhub',
+  //       permanent: true,
+  //     }
+  //   ]
+  // }
 }
 
 module.exports = nextConfig
