@@ -1,4 +1,14 @@
 /** @type {import('next').NextConfig} */
+
+const rewrites = () => {
+  return [
+    {
+      source: "/simhub/:slug*",
+      destination: "https://simhub-test.yuansuan.com/simhub/:slug*",
+    },
+  ];
+};
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -20,6 +30,7 @@ const nextConfig = {
       },
     ],
   },
+  rewrites,
   // async redirects(){
   //   return [
   //     {
