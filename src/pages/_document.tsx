@@ -14,83 +14,86 @@ interface DocumentProps {
   styledComponentsStyleTags: JSX.Element[]
 }
 
-class MyDocument extends Document<DocumentProps> {
-  static async getInitialProps(ctx: DocumentContext) {
-    const originalRenderPage = ctx.renderPage
+const MyDocument = ({
+  emotionStyleTags,
+  styledComponentsStyleTags
+}:DocumentProps): JSX.Element  => {
+  return (
+    <Html lang="en">
+      <Head>
+        <meta charSet="utf-8" />
+        <link rel="icon" href="/next.svg" />
+        {/* PWA primary color */}
+        <meta name="theme-color" content={theme.palette.background.paper} />
+        <meta content="#fbfbfb" name="theme-color" />
+        <meta content="#fbfbfb" name="msapplication-navbutton-color" />
+        <meta content="#fbfbfb" name="apple-mobile-web-app-status-bar-style" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
 
-    // Emotion cache
-    const cache = createEmotionCache()
-    const { extractCriticalToChunks } = createEmotionServer(cache)
+        {/* <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,500;0,700;1,500;1,700&display=swap"
+          rel="stylesheet"
+        /> */}
 
-    // Styled-components sheet
-    const sheet = new ServerStyleSheet()
+        {/* Inject MUI styles first to match with the prepend: true configuration. */}
+        {emotionStyleTags}
+        {styledComponentsStyleTags}
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  )
+}
 
-    try {
-      ctx.renderPage = () =>
-        originalRenderPage({
-          enhanceApp: (
-            App: NextComponentType<AppContextType, AppInitialProps, AppPropsType & { emotionCache: EmotionCache }>
-          ) =>
-            function EnhanceApp(props) {
-              return sheet.collectStyles(<App emotionCache={cache} {...props} />)
-            },
-        })
+MyDocument.getInitialProps = async (ctx: DocumentContext) => {
+  const originalRenderPage = ctx.renderPage
 
-      const initialProps = await Document.getInitialProps(ctx)
+  // Emotion cache
+  const cache = createEmotionCache()
+  const { extractCriticalToChunks } = createEmotionServer(cache)
 
-      // Emotion styles
-      const emotionStyles = extractCriticalToChunks(initialProps.html)
-      const emotionStyleTags = emotionStyles.styles.map((style) => (
-        <style
-          data-emotion={`${style.key} ${style.ids.join(' ')}`}
-          key={style.key}
-          dangerouslySetInnerHTML={{ __html: style.css }}
-        />
-      ))
+  // Styled-components sheet
+  const sheet = new ServerStyleSheet()
 
-      // Styled-components styles
-      const styledComponentsStyleTags = sheet.getStyleElement()
+  try {
+    ctx.renderPage = () =>
+      originalRenderPage({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        enhanceApp: (
+          App: NextComponentType<AppContextType, AppInitialProps, AppPropsType & { emotionCache: EmotionCache }>
+        ) =>
+          function EnhanceApp(props) {
+            return sheet.collectStyles(<App emotionCache={cache} {...props} />)
+          },
+      })
 
-      return {
-        ...initialProps,
-        emotionStyleTags,
-        styledComponentsStyleTags,
-      }
-    } finally {
-      sheet.seal()
+    const initialProps = await Document.getInitialProps(ctx)
+
+    // Emotion styles
+    const emotionStyles = extractCriticalToChunks(initialProps.html)
+    const emotionStyleTags = emotionStyles.styles.map((style) => (
+      <style
+        data-emotion={`${style.key} ${style.ids.join(' ')}`}
+        key={style.key}
+        dangerouslySetInnerHTML={{ __html: style.css }}
+      />
+    ))
+
+    // Styled-components styles
+    const styledComponentsStyleTags = sheet.getStyleElement()
+
+    return {
+      ...initialProps,
+      emotionStyleTags,
+      styledComponentsStyleTags,
     }
-  }
-
-  render() {
-    return (
-      <Html lang="en">
-        <Head>
-          <meta charSet="utf-8" />
-          <link rel="icon" href="/next.svg" />
-          {/* PWA primary color */}
-          <meta name="theme-color" content={theme.palette.background.paper} />
-          <meta content="#fbfbfb" name="theme-color" />
-          <meta content="#fbfbfb" name="msapplication-navbutton-color" />
-          <meta content="#fbfbfb" name="apple-mobile-web-app-status-bar-style" />
-          <meta content="yes" name="apple-mobile-web-app-capable" />
-
-          {/* <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,500;0,700;1,500;1,700&display=swap"
-            rel="stylesheet"
-          /> */}
-
-          {/* Inject MUI styles first to match with the prepend: true configuration. */}
-          {this.props.emotionStyleTags}
-          {this.props.styledComponentsStyleTags}
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    )
+  } finally {
+    sheet.seal()
   }
 }
 

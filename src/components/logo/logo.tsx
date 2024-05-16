@@ -20,8 +20,6 @@ const Logo: FC<Props> = ({ onClick, variant }) => {
   )
 }
 
-Logo.defaultProps = {
-  variant: 'primary',
-}
+
 
 export default Logo
